@@ -22,15 +22,34 @@ class Master extends Controller
                 $response = false;
                 switch($data->action)
                 {
-                    case 'Login';
+                    case 'Create Profile';
+                        
                         if($this->verifyData()!==false)
                         {
-                            return $this->logUser();
+                            $response = $this->createProfile();
                         }else{
                             $response = false;
                         }
+
+                    break;
+                    case 'Update Profile':
+
+                        if($this->verifyData()!==false)
+                        {
+                            $response = $this->updateProfile();
+                            error_log('response please: '.print_r($response, 1));
+                        }else{
+                            $response = false;
+                        }
+
+                    break;
+                    case 'Get Profile':
+
+                        $response = $this->getProfile($data->person);
+
                     break;
                 }
+                error_log('response please: '.print_r($response, 1));
                 echo json_encode($response);
             }
 
@@ -42,8 +61,9 @@ class Master extends Controller
     {
         $data = new stdClass();
         $data->api = 'verify';
-        $data->action = 'Login';
+        $data->action = 'Profile';
         $data->params = $this->getRequest()->params;
+
         $res = json_decode(ApiModel::doAPI($data));
 
         foreach($res as $key=>$value)
@@ -57,43 +77,59 @@ class Master extends Controller
         
     }
 
-    private function logUser()
+    private function createProfile()
     {
-        $data = new stdClass();
-        $data->api = 'database';
-        $data->connection = $this->getRequest()->connection;
-        $data->procedure = $this->getRequest()->procedure;
-        $data->params = $this->getRequest()->params;
+        $res = ApiModel::createPersonProfile($this->getPersonProfile());
 
-        $res = json_decode(ApiModel::doAPI($data));
-        $resObj = $res[0];
-
-        if($resObj->code !== '6000'){
-            echo json_encode($resObj);
-            die;
+        if($res->code !== '6000')
+        {
+            return false;
         }
-
-        if($resObj->UserStatus !== '3'){
-            echo json_encode($resObj);
-            die;
-        }
-
-        $res = $this->createToken($resObj);
-        $res->UserID = $resObj->UserID;
-        $res->UserStatus = $resObj->UserStatus;
-        echo json_encode($res);
-        die;
+        return $res;
     }
 
-    private function createToken($input)
+    private function updateProfile()
     {
-        error_log('prepare data to token response here: '.print_r($input, 1));         
-        $data = new stdClass();
-        $data->api = 'token';
-        $data->action = 'Create';
-        $data->UserId = $input->UserID;
-        $data->projectId = $this->getRequest()->params->projectId;
-        $res = json_decode(ApiModel::doAPI($data));
+        $res = ApiModel::updatePersonProfile($this->getPersonProfile());
+        
+        if($res->code !== '6000')
+        {
+            return false;
+        }
         return $res;
+    }
+
+    private function getPersonProfile(){
+
+        $input = new stdClass();
+        $input = $this->getRequest()->params;
+
+        $data = new stdClass();
+        $data->userId = $this->getParam('user', $input);
+        $data->about = $this->getParam('about', $input);
+        $data->document = $this->getParam('document', $input);
+        $data->skill1 = $this->getParam('s1', $input->skills);
+        $data->skill2 = $this->getParam('s2', $input->skills);
+        $data->skill3 = $this->getParam('s3', $input->skills);
+        $data->skill4 = $this->getParam('s4', $input->skills);
+
+        return $data;
+    }
+
+    private function getProfile($input)
+    {
+        $res = ApiModel::getProfile($input);
+        return $res;
+    }
+
+    private function getParam($object, $input)
+    {
+        foreach($input as $key => $value){
+            if($key == $object){
+                error_log('show value: '.$key.' '.$value);
+                return $value;
+            }
+        }
+        return NULL;
     }
 }
