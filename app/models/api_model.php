@@ -24,6 +24,47 @@ class ApiModel extends Controller
         curl_close($ch);
     }
 
+    public function createPersonProfile($input)
+    {
+        error_log('show input: '.print_r($input, 1));
+        $data = new stdClass();
+        $data->api = 'database';
+        $data->connection = 'CORE';
+        $data->procedure = __FUNCTION__;
+        $data->params = $input;
+        $res = self::responseObject(self::doAPI($data));
+        return $res[0];
+    }
+
+    public function updatePersonProfile($input)
+    {
+        error_log('show input updatePersonProfile: '.print_r($input, 1));
+        $data = new stdClass();
+        $data->api = 'database';
+        $data->connection = 'CORE';
+        $data->procedure = __FUNCTION__;
+        $data->params = $input;
+        $res = self::responseObject(self::doAPI($data));
+        return $res[0];
+    }
+
+    public function getProfile($input)
+    {
+        $data = new stdClass();
+        $data->api = 'database';
+        $data->connection = 'CORE';
+        $data->procedure = __FUNCTION__;
+        $data->params->userId = $input;
+        $res = self::responseObject(self::doAPI($data));
+        return $res[0];
+    }
+
+    public function responseObject($data)
+    {
+        $resObj = json_decode($data);
+        return $resObj;
+    }
+
     public function getHeader($data)
     {
         $signature = base64_encode(hash_hmac('sha256', $data, SIGNATURE, true));
