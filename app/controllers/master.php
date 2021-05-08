@@ -37,7 +37,6 @@ class Master extends Controller
                         if($this->verifyData()!==false)
                         {
                             $response = $this->updateProfile();
-                            error_log('response please: '.print_r($response, 1));
                         }else{
                             $response = false;
                         }
@@ -49,7 +48,6 @@ class Master extends Controller
 
                     break;
                 }
-                error_log('response please: '.print_r($response, 1));
                 echo json_encode($response);
             }
 
